@@ -48,12 +48,11 @@ const getApiAndEmit = (socket) => {
                   con.connect(function(err) {
                     if (err) console.log(err);
                         con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
-                        if (err) throw err;                       
+                        if (err) console.log(err);                      
                         Object.keys(result).forEach(async function(key) {
                         var row = result[key];
                         const transaction= await Transaction.findOne({trans_id:row.trans_id})
                         if(transaction){
-                          
                           const response = {deposited: false};                            
                           io.sockets.emit("FromAPI2", response);
                           // con.end();
@@ -72,19 +71,20 @@ const getApiAndEmit = (socket) => {
                                     phone: row.bill_ref_number,
                                     floatBalance:row.org_balance
                               })
-
+                              
                          await trans.save().then(async(item)=>{
                             try{
                     
                             const account = await Account.findOne({ phone:row.bill_ref_number});
                             account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-                            await account.save()
+                           const log = await account.save() 
+                           console.log(log)
                             const response = {
                                       deposited: true,
                                       trans_id:row.trans_id
                                     };
                             io.sockets.emit("FromAPI2", response);
-                            console.log(account.balance);
+                           
                             }catch(err){
                               console.log(err)
                             }
@@ -100,7 +100,7 @@ const getApiAndEmit = (socket) => {
       }
 };
 
-const MONGO_URI =  "mongodb+srv://Safaribust:safaribust@cluster0.yuiecha.mongodb.net/?retryWrites=true&w=majority";
+const MONGO_URI =  "mongodb+srv://Safaribust:safaribust@cluster0.yuiecha.mongodb.net/?retryWrites=true&w=majority";    
 const PORT = process.env.PORT || 8050;
 mongoose
   .connect(`${MONGO_URI}`,{
