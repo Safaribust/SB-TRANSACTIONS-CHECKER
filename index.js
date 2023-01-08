@@ -109,19 +109,19 @@ const getApiAndEmit = (socket) => {
          con.connect(function(err) {
            if (err) throw err;
                con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
-               if (err) throw err;                       
+               if (err) throw err;                     
                Object.keys(result).forEach(async function(key) {
-               var row = result[key];
-               const transaction= await Transaction.findOne({trans_id:row.trans_id})
-               if(transaction){
-                 const response = {deposited: false};                            
+                 var row = result[key];     
+                 const transaction= await Transaction.findOne({trans_id:row.trans_id})                   
+                 if(transaction){
+                 const response = {deposited: false};  
                  io.sockets.emit("FromAPI2", response);
                 //  con.end();
                  return
                }
                con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
                      if(err) throw err;
-                      // con.end();
+                    
                    })
                  const trans= new Transaction({
                            type:"Deposit",
@@ -144,6 +144,7 @@ const getApiAndEmit = (socket) => {
                              trans_id:row.trans_id
                            };
                    io.sockets.emit("FromAPI2", response);
+                   con.end();
                    }catch(err){
                      console.log(err)
                    }
