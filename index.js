@@ -54,8 +54,7 @@ const getApiAndEmit = (socket) => {
                         const transaction= await Transaction.findOne({trans_id:row.trans_id})
                         if(transaction){
                           const response = {deposited: false};                            
-                          io.sockets.emit("FromAPI2", response);
-                          // con.end();
+                          io.sockets.emit("FromAPI2", response)
                           return
                         }
                         con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
@@ -105,7 +104,7 @@ const PORT = process.env.PORT || 8050;
 mongoose
   .connect(`${MONGO_URI}`,{
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true 
   })
   .then(() => {
     server.listen(PORT, () => {
