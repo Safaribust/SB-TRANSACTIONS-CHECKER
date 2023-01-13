@@ -21,9 +21,9 @@ let interval;
 
 const io = socketIo(server, {
   cors: {
-    origin: ["https://safaribust.co.ke","http://localhost:3000","https://safaribust.netlify.app"],
+    origin: ["https://safaribust.co.ke","http://safaribust.co.ke","http://localhost:3000","https://safaribust.netlify.app"],
   },
-});
+}); 
 
 const ids=[]
 
@@ -34,94 +34,34 @@ io.on("connection", (socket) => {
   }
   setInterval(() => getApiAndEmit(socket), 5000);
   socket.on("disconnect", (reason) => {
+    console.log("client disconnected",reason);
   });
 });
 
-// const getApiAndEmit = (socket) => {
-//            try{
-//                var con = mysql.createConnection({
-//                   host: "173.214.168.54",
-//                   user: "bustadmin_dbadm",
-//                   password: ";,bp~AcEX,*a",
-//                   database:"bustadmin_paydb"
-//                 });
-//                   con.connect(function(err) {
-//                     if (err) console.log(err);
-//                         con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
-//                         if (err) console.log(err);                      
-//                         Object.keys(result).forEach(async function(key) {
-//                         var row = result[key];
-//                         const transaction= await Transaction.findOne({trans_id:row.trans_id})
-//                         if(transaction){
-//                           const response = {deposited: false};                            
-//                           io.sockets.emit("FromAPI2", response)
-//                           return
-//                         }
-//                         con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
-//                               if(err) throw err;
-//                               //  con.end();
-//                             })
-//                           const trans= new Transaction({
-//                                     type:"Deposit",
-//                                     trans_id:row.trans_id,
-//                                     bill_ref_number:row.bill_ref_number,
-//                                     trans_time:row.trans_time,
-//                                     amount:row.trans_amount,
-//                                     phone: row.bill_ref_number,
-//                                     floatBalance:row.org_balance
-//                               })
-                              
-//                          await trans.save().then(async(item)=>{
-//                             try{
-                    
-//                             const account = await Account.findOne({ phone:row.bill_ref_number});
-//                             account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-//                            const log = await account.save() 
-//                            console.log(log)
-//                             const response = {
-//                                       deposited: true,
-//                                       trans_id:row.trans_id
-//                                     };
-//                             io.sockets.emit("FromAPI2", response);
-                           
-//                             }catch(err){
-//                               console.log(err)
-//                             }
-//                          })
-                  
-//                      });
-//                 })
-                
-//             });
-//             // return con.end(()=>console.log("connection closed"))
-//           }catch(err){
-//           console.log(err)
-//       }
-// };
 const getApiAndEmit = (socket) => {
   try{
-      var con = mysql.createConnection({
+      var con = mysql.createConnection({ 
          host: "173.214.168.54",
          user: "bustadmin_dbadm",
          password: ";,bp~AcEX,*a",
          database:"bustadmin_paydb"
-       });
+       }); 
          con.connect(function(err) {
            if (err) throw err;
                con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
-               if (err) throw err;                     
+               if (err) throw err;                       
                Object.keys(result).forEach(async function(key) {
-                 var row = result[key];     
-                 const transaction= await Transaction.findOne({trans_id:row.trans_id})                   
-                 if(transaction){
-                 const response = {deposited: false};  
+               var row = result[key];
+               const transaction= await Transaction.findOne({trans_id:row.trans_id})
+               if(transaction){
+                 const response = {deposited: false};                            
                  io.sockets.emit("FromAPI2", response);
-                //  con.end();
+                 con.end();
                  return
                }
                con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
                      if(err) throw err;
-                    
+                      con.end();
                    })
                  const trans= new Transaction({
                            type:"Deposit",
@@ -139,12 +79,12 @@ const getApiAndEmit = (socket) => {
                    const account = await Account.findOne({ phone:row.bill_ref_number});
                    account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
                    await account.save()
+                   console.log(account);
                    const response = {
                              deposited: true,
                              trans_id:row.trans_id
                            };
                    io.sockets.emit("FromAPI2", response);
-                   con.end();
                    }catch(err){
                      console.log(err)
                    }
@@ -159,6 +99,7 @@ const getApiAndEmit = (socket) => {
  console.log(err)
 }
 };
+ 
 const MONGO_URI =  "mongodb+srv://Safaribust:safaribust@cluster0.yuiecha.mongodb.net/?retryWrites=true&w=majority";    
 const PORT = process.env.PORT || 8050;
 mongoose
