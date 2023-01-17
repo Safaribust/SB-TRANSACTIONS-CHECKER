@@ -25,7 +25,7 @@ const io = socketIo(server, {
   },
 }); 
 
-const ids=[]
+const ids=[];
 
 io.on("connection", (socket) => {
   console.log("client connected: ", socket.id);
