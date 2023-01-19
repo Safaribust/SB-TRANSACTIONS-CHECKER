@@ -32,7 +32,7 @@ io.on("connection", (socket) => {
   if (interval) {
     clearInterval(interval);
   }
-  setInterval(() => getApiAndEmit(socket), 5000);
+  setInterval(() => getApiAndEmit(socket), 10000);
   socket.on("disconnect", (reason) => {
     console.log("client disconnected",reason);
   });
@@ -46,55 +46,62 @@ const getApiAndEmit = (socket) => {
          password: ";,bp~AcEX,*a",
          database:"bustadmin_paydb"
        }); 
-         con.connect(function(err) {
+         con.connect((err)=> {
            if (err) throw err;
-               con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
+               con.query(`SELECT * FROM transaction WHERE processed=0 `, (err, result) =>
+               {
                if (err) throw err;                       
-               Object.keys(result).forEach(async function(key) {
+            Object.keys(result).forEach(async (key)=> { 
                var row = result[key];
                const transaction= await Transaction.findOne({trans_id:row.trans_id})
-               if(transaction){
-                 const response = {deposited: false};                            
-                 io.sockets.emit("FromAPI2", response);
-                 con.end();
-                 return
-               }
-               con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
-                     if(err) throw err;
-                      con.end();
-                   })
-                 const trans= new Transaction({
-                           type:"Deposit",
-                           trans_id:row.trans_id,
-                           bill_ref_number:row.bill_ref_number,
-                           trans_time:row.trans_time,
-                           amount:row.trans_amount,
-                           phone: row.bill_ref_number,
-                           floatBalance:row.org_balance
-                     })
+               console.log(transaction);
+               if(!transaction){
+                 con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
+                   if(err) throw err;
+                  //  con.end();
+                   return con.end(()=>console.log("connection closed"))
+                  })
+                  const trans= new Transaction({
+                    type:"Deposit",
+                        trans_id:row.trans_id,
+                        bill_ref_number:row.bill_ref_number,
+                        trans_time:row.trans_time,
+                        amount:row.trans_amount,
+                        phone: row.bill_ref_number,
+                        floatBalance:row.org_balance
+                  })
 
-                await trans.save().then(async(item)=>{
-                   try{
-           
-                   const account = await Account.findOne({ phone:row.bill_ref_number});
-                   account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-                   await account.save()
-                   console.log(account);
-                   const response = {
-                             deposited: true,
-                             trans_id:row.trans_id
-                           };
-                   io.sockets.emit("FromAPI2", response);
-                   }catch(err){
-                     console.log(err)
-                   }
-                })
+             await trans.save().then(async(item)=>{
+                try{
+        
+                const account = await Account.findOne({ phone:row.bill_ref_number});
+                account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
+                await account.save()
+                console.log(account);
+                const response = {
+                  deposited: true,
+                  trans_id:row.trans_id
+                };
+                io.sockets.emit("FromAPI2", response);
+                }catch(err){
+                  console.log(err)
+                }
+              })
+            }else{
+              const response = {deposited: false};                          
+              io.sockets.emit("FromAPI2", response);
+              return con.end(()=>console.log("connection closed"))
+               
+               }
+             
+  
+          
          
             });
        })
        
    });
-   // return con.end(()=>console.log("connection closed"))
+    
  }catch(err){
  console.log(err)
 }
@@ -117,3 +124,35 @@ mongoose
   });
 
   //git push https://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@github.com/Trisonweru/checker.git
+
+
+//   con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
+//     if(err) throw err;
+//      con.end();
+//   })
+// const trans= new Transaction({
+//           type:"Deposit",
+//           trans_id:row.trans_id,
+//           bill_ref_number:row.bill_ref_number,
+//           trans_time:row.trans_time,
+//           amount:row.trans_amount,
+//           phone: row.bill_ref_number,
+//           floatBalance:row.org_balance
+//     })
+
+// await trans.save().then(async(item)=>{
+//   try{
+
+//   const account = await Account.findOne({ phone:row.bill_ref_number});
+//   account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
+//   await account.save()
+//   console.log(account);
+//   const response = {
+//             deposited: true,
+//             trans_id:row.trans_id
+//           };
+//   io.sockets.emit("FromAPI2", response);
+//   }catch(err){
+//     console.log(err)
+//   }
+// })
