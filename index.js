@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const axios = require('axios');
-const { Pool } = require('mysql2');
+const { Pool } = require('mysql');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
