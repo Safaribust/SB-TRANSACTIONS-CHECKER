@@ -4,85 +4,74 @@ const socketIo = require("socket.io");
 var request = require("request");
 const axios = require("axios");
 var mysql = require('mysql');
+const { Pool } = require('mysql2');
 const mongoose = require("mongoose");
 require("dotenv").config();
-
 
 const User = require("./models/users");
 const Account = require("./models/account");
 const Transaction = require("./models/transactions");
 const Logs = require("./models/logs");
 
-
 const app = express();
-
-const server = http.createServer(app);  
+const server = http.createServer(app);
 let interval;
 
 const io = socketIo(server, {
-  cors: {
-    origin: ["http://localhost:3000","https://crash.safaribust.co.ke","*"],
-  },
-}); 
+cors: {
+origin: ["http://localhost:3000","https://crash.safaribust.co.ke","*"],
+},
+});
 
 const ids=[];
 
 io.on("connection", (socket) => {
-  console.log("client connected: ", socket.id);
-  if (interval) {
-    clearInterval(interval);
-  }
-  setInterval(() => getApiAndEmit(socket), 50000);
-  socket.on("disconnect", (reason) => {
-    console.log("client disconnected",reason);
-  });
-});
-var con;
-
-function connectToDb() {
-  if (!con) {
-    con = mysql.createConnection({ 
-      host: "173.214.168.54",
-      user: "bustadmin_dbadm",
-      password: ";,bp~AcEX,*a",
-      database:"bustadmin_paydb"
-    });
-  }
-
-  return con;
+console.log("client connected: ", socket.id);
+if (interval) {
+clearInterval(interval);
 }
+setInterval(() => getApiAndEmit(socket), 50000);
+socket.on("disconnect", (reason) => {
+console.log("client disconnected", reason);
+});
+});
+
+const pool = new Pool({
+host: "173.214.168.54",
+user: "bustadmin_dbadm",
+password: ";,bp~AcEX,*a",
+database: "bustadmin_paydb",
+connectionLimit: 10
+});
 
 const getApiAndEmit = (socket) => {
- const connection = connectToDb();
-    try{
-           connection.connect(function(err) {
-             if (err) throw err;
-                 connection.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
-                 if (err) throw err;                     
-                 Object.keys(result).forEach(async function(key) {
-                 var row = result[key];
-                 const transaction= await Transaction.findOne({trans_id:row.trans_id})
-                 if(transaction){
-                   console.log("no new transactions");
-                   const response = {deposited: false};                            
-                   io.sockets.emit("FromAPI2", response);
-                   connection.close();
-                   return
-                 }else{
-                  connection.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
-                    if(err) throw err;
-                     connection.close();
-                  })
-                const trans= new Transaction({
-                          type:"Deposit",
-                          trans_id:row.trans_id,
-                          bill_ref_number:row.bill_ref_number,
-                          trans_time:row.trans_time,
-                          amount:row.trans_amount,
-                          phone: row.bill_ref_number,
-                          floatBalance:row.org_balance
-                    })
-
+pool.getConnection(function (err, connection) {
+if (err) throw err;
+connection.query(SELECT * FROM transaction WHERE processed=0 , function (err, result) {
+if (err) throw err;
+Object.keys(result).forEach(async function (key) {
+var row = result[key];
+const transaction = await Transaction.findOne({ trans_id: row.trans_id });
+if (transaction) {
+console.log("no new transactions");
+const response = { deposited: false };
+io.sockets.emit("FromAPI2", response);
+connection.release();
+return
+} else {
+connection.query(UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}", function (err, result) {
+if (err) throw err;
+connection.release();
+});
+const trans = new Transaction({
+type: "Deposit",
+trans_id: row.trans_id,
+bill_ref_number: row.bill_ref_number,
+trans_time: row.trans_time,
+amount: row.trans_amount,
+phone: row.bill_ref_number,
+floatBalance: row.org_balance
+});
                await trans.save().then(async(item)=>{
                   try{
           
