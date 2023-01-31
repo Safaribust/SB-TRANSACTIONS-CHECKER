@@ -37,19 +37,27 @@ io.on("connection", (socket) => {
     console.log("client disconnected",reason);
   });
 });
- var con = mysql.createConnection({ 
-  host: "173.214.168.54",
-  user: "bustadmin_dbadm",
-  password: ";,bp~AcEX,*a",
-  database:"bustadmin_paydb"
-}); 
+var con;
+
+function connectToDb() {
+  if (!con) {
+    con = mysql.createConnection({ 
+      host: "173.214.168.54",
+      user: "bustadmin_dbadm",
+      password: ";,bp~AcEX,*a",
+      database:"bustadmin_paydb"
+    });
+  }
+
+  return con;
+}
 
 const getApiAndEmit = (socket) => {
- 
+ const connection = connectToDb();
     try{
-           con.connect(function(err) {
+           connection.connect(function(err) {
              if (err) throw err;
-                 con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
+                 connection.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
                  if (err) throw err;                     
                  Object.keys(result).forEach(async function(key) {
                  var row = result[key];
@@ -58,12 +66,12 @@ const getApiAndEmit = (socket) => {
                    console.log("no new transactions");
                    const response = {deposited: false};                            
                    io.sockets.emit("FromAPI2", response);
-                   con.close();
+                   connection.close();
                    return
                  }else{
-                  con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
+                  connection.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
                     if(err) throw err;
-                     con.close();
+                     connection.close();
                   })
                 const trans= new Transaction({
                           type:"Deposit",
