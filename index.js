@@ -35,17 +35,23 @@ socket.on("disconnect", (reason) => {
 console.log("client disconnected", reason);
 });
 });
-
-const pool = new Pool({
+var pool;
+function conPooler=()=>{
+  if(!pool){
+   pool = new Pool({
 host: "173.214.168.54",
 user: "bustadmin_dbadm",
 password: ";,bp~AcEX,*a",
 database: "bustadmin_paydb",
 connectionLimit: 10
 });
+  }
+  return pool
+}
 
+const pooler=conPooler()
 const getApiAndEmit = (socket) => {
-pool.getConnection(function (err, connection) {
+pooler.getConnection(function (err, connection) {
 if (err) throw err;
 connection.query(SELECT * FROM transaction WHERE processed=0 , function (err, result) {
 if (err) throw err;
