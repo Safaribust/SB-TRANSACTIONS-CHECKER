@@ -55,6 +55,7 @@ const getApiAndEmit = async (socket) => {
         Object.keys(result).forEach(async (key) => {
           const row = result[key];
           const transaction = await Transaction.findOne({ trans_id: row.trans_id });
+            console.log(transaction);
           if (transaction) {
             console.log('No new transactions');
             const response = { deposited: false };
