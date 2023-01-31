@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const axios = require('axios');
-const { Pool } = require('mysql');
+const { createPool } = require('mysql');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
@@ -23,13 +23,13 @@ const io = socketIo(server, {
 let pool;
 const connectPool = () => {
   if (!pool) {
-    pool = new Pool({
-      host: '173.214.168.54',
-      user: 'bustadmin_dbadm',
-      password: ';,bp~AcEX,*a',
-      database: 'bustadmin_paydb',
-      connectionLimit: 10,
-    });
+   pool = createPool({
+  host: "173.214.168.54",
+  user: "bustadmin_dbadm",
+  password: ";,bp~AcEX,*a",
+  database: "bustadmin_paydb",
+  connectionLimit: 10
+});
   }
   return pool;
 };
