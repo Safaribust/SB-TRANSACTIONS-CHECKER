@@ -21,7 +21,7 @@ let interval;
 
 const io = socketIo(server, {
   cors: {
-    origin: ["http://crash.safaribust.co.ke","http://localhost:3000","https://crash.safaribust.co.ke","https://safaribust.co.ke","http://safaribust.co.ke","http://localhost:3000","https://safaribust.netlify.app","*"],
+    origin: ["http://localhost:3000","https://crash.safaribust.co.ke","*"],
   },
 }); 
 
@@ -58,8 +58,8 @@ const getApiAndEmit = (socket) => {
                if(!transaction){
                  con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
                    if(err) throw err;
-                  //  con.end();
-                   return con.end(()=>console.log("connection closed"))
+                   con.end();
+                
                   })
                   const trans= new Transaction({
                     type:"Deposit",
@@ -123,36 +123,4 @@ mongoose
     console.log(err);
   });
 
-  //git push https://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@github.com/Trisonweru/checker.git
 
-
-//   con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
-//     if(err) throw err;
-//      con.end();
-//   })
-// const trans= new Transaction({
-//           type:"Deposit",
-//           trans_id:row.trans_id,
-//           bill_ref_number:row.bill_ref_number,
-//           trans_time:row.trans_time,
-//           amount:row.trans_amount,
-//           phone: row.bill_ref_number,
-//           floatBalance:row.org_balance
-//     })
-
-// await trans.save().then(async(item)=>{
-//   try{
-
-//   const account = await Account.findOne({ phone:row.bill_ref_number});
-//   account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-//   await account.save()
-//   console.log(account);
-//   const response = {
-//             deposited: true,
-//             trans_id:row.trans_id
-//           };
-//   io.sockets.emit("FromAPI2", response);
-//   }catch(err){
-//     console.log(err)
-//   }
-// })
