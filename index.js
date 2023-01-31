@@ -38,7 +38,7 @@ const pooler = connectPool();
 
 io.on('connection', (socket) => {
   console.log('Client connected: ', socket.id);
-  setInterval(() => getApiAndEmit(socket), 50000);
+  setInterval(() => getApiAndEmit(socket), 5000);
   socket.on('disconnect', (reason) => {
     console.log('Client disconnected:', reason);
   });
@@ -48,8 +48,10 @@ const getApiAndEmit = async (socket) => {
   try {
     pooler.getConnection(async (err, connection) => {
       if (err) throw err;
+      console.log('Client disconnected waiting for mysql');
       connection.query('SELECT * FROM transaction WHERE processed = 0', async (err, result) => {
         if (err) throw err;
+          console.log('Client disconnected waiting for mysql==========',result);
         Object.keys(result).forEach(async (key) => {
           const row = result[key];
           const transaction = await Transaction.findOne({ trans_id: row.trans_id });
