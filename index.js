@@ -38,13 +38,14 @@ io.on("connection", (socket) => {
   });
 });
 
-var con = mysql.createConnection({ 
+
+const getApiAndEmit = (socket) => {
+  var con = mysql.createConnection({ 
   host: "173.214.168.54",
   user: "bustadmin_dbadm",
   password: ";,bp~AcEX,*a",
   database:"bustadmin_paydb"
 }); 
-const getApiAndEmit = (socket) => {
     try{
            con.connect(function(err) {
              if (err) throw err;
