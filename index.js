@@ -37,15 +37,15 @@ io.on("connection", (socket) => {
     console.log("client disconnected",reason);
   });
 });
-
-
-const getApiAndEmit = (socket) => {
-  var con = mysql.createConnection({ 
+ var con = mysql.createConnection({ 
   host: "173.214.168.54",
   user: "bustadmin_dbadm",
   password: ";,bp~AcEX,*a",
   database:"bustadmin_paydb"
 }); 
+
+const getApiAndEmit = (socket) => {
+ 
     try{
            con.connect(function(err) {
              if (err) throw err;
@@ -58,12 +58,12 @@ const getApiAndEmit = (socket) => {
                    console.log("no new transactions");
                    const response = {deposited: false};                            
                    io.sockets.emit("FromAPI2", response);
-                   con.end();
+                   con.close();
                    return
                  }else{
                   con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
                     if(err) throw err;
-                     con.end();
+                     con.close();
                   })
                 const trans= new Transaction({
                           type:"Deposit",
