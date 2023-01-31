@@ -32,74 +32,76 @@ io.on("connection", (socket) => {
   if (interval) {
     clearInterval(interval);
   }
-  setInterval(() => getApiAndEmit(socket), 10000);
+  setInterval(() => getApiAndEmit(socket), 50000);
   socket.on("disconnect", (reason) => {
     console.log("client disconnected",reason);
   });
 });
- var con = mysql.createConnection({ 
-         host: "173.214.168.54",
-         user: "bustadmin_dbadm",
-         password: ";,bp~AcEX,*a",
-         database:"bustadmin_paydb"
-       }); 
+
+var con = mysql.createConnection({ 
+  host: "173.214.168.54",
+  user: "bustadmin_dbadm",
+  password: ";,bp~AcEX,*a",
+  database:"bustadmin_paydb"
+}); 
 const getApiAndEmit = (socket) => {
-           try{
-                  con.connect(function(err) {
-                    if (err) throw err;
-                        con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
-                        if (err) throw err;                     
-                        Object.keys(result).forEach(async function(key) {
-                        var row = result[key];
-                        const transaction= await Transaction.findOne({trans_id:row.trans_id})
-                        if(transaction){
-                          console.log("no new transactions");
-                          const response = {deposited: false};                            
-                          io.sockets.emit("FromAPI2", response);
-                          con.end();
-                          return
-                        }
-                        con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
-                              if(err) throw err;
-                               con.end();
-                            })
-                          const trans= new Transaction({
-                                    type:"Deposit",
-                                    trans_id:row.trans_id,
-                                    bill_ref_number:row.bill_ref_number,
-                                    trans_time:row.trans_time,
-                                    amount:row.trans_amount,
-                                    phone: row.bill_ref_number,
-                                    floatBalance:row.org_balance
-                              })
+    try{
+           con.connect(function(err) {
+             if (err) throw err;
+                 con.query(`SELECT * FROM transaction WHERE processed=0 `, function (err, result) {
+                 if (err) throw err;                     
+                 Object.keys(result).forEach(async function(key) {
+                 var row = result[key];
+                 const transaction= await Transaction.findOne({trans_id:row.trans_id})
+                 if(transaction){
+                   console.log("no new transactions");
+                   const response = {deposited: false};                            
+                   io.sockets.emit("FromAPI2", response);
+                   con.end();
+                   return
+                 }else{
+                  con.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`,function(err,result){
+                    if(err) throw err;
+                     con.end();
+                  })
+                const trans= new Transaction({
+                          type:"Deposit",
+                          trans_id:row.trans_id,
+                          bill_ref_number:row.bill_ref_number,
+                          trans_time:row.trans_time,
+                          amount:row.trans_amount,
+                          phone: row.bill_ref_number,
+                          floatBalance:row.org_balance
+                    })
 
-                         await trans.save().then(async(item)=>{
-                            try{
+               await trans.save().then(async(item)=>{
+                  try{
+          
+                  const account = await Account.findOne({ phone:row.bill_ref_number});
+                  account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
+                  await account.save()
+                  const response = {
+                            deposited: true,
+                            trans_id:row.trans_id
+                          };
+                  io.sockets.emit("FromAPI2", response);
                     
-                            const account = await Account.findOne({ phone:row.bill_ref_number});
-                            account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-                            await account.save()
-                            const response = {
-                                      deposited: true,
-                                      trans_id:row.trans_id
-                                    };
-                            io.sockets.emit("FromAPI2", response);
-                                con.end();
-                            }catch(err){
-                              console.log(err)
-                            }
-                         })
-                  
-                     });
-                })
-                
-            });
-   
-          }catch(err){
-          console.log(err)
-      }
-};
+                  }catch(err){
+                    console.log(err)
+                  }
+               })
+                 }
+              
+           
+              });
+         })
+         
+     });
 
+   }catch(err){
+   console.log(err)
+}
+};
 
  
 const MONGO_URI =  "mongodb+srv://Safaribust:safaribust@cluster0.yuiecha.mongodb.net/?retryWrites=true&w=majority";    
