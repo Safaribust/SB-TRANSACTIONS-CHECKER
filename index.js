@@ -3,7 +3,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 var request = require("request");
 const axios = require("axios");
-var mysql = require('mysql');
+var mysql = require('mysql2');
 const { Pool } = require('mysql2');
 const mongoose = require("mongoose");
 require("dotenv").config();
