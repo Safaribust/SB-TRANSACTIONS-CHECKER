@@ -21,7 +21,7 @@ let interval;
 
 const io = socketIo(server, {
   cors: {
-    origin: ["http://crash.safaribust.co.ke","https://crash.safaribust.co.ke","https://safaribust.co.ke","http://safaribust.co.ke","http://localhost:3000","https://safaribust.netlify.app","*"],
+    origin: ["http://crash.safaribust.co.ke","http://localhost:3000","https://crash.safaribust.co.ke","https://safaribust.co.ke","http://safaribust.co.ke","http://localhost:3000","https://safaribust.netlify.app","*"],
   },
 }); 
 
