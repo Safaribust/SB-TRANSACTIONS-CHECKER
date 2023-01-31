@@ -84,6 +84,7 @@ const getApiAndEmit = (socket) => {
                                       trans_id:row.trans_id
                                     };
                             io.sockets.emit("FromAPI2", response);
+                                con.end();
                             }catch(err){
                               console.log(err)
                             }
