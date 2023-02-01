@@ -60,7 +60,7 @@ io.sockets.emit('FromAPI2', response);
 connection.end();
 return;
 } else {
-connection.query(UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}", (err, result) => {
+connection.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`, (err, result) => {
 if (err) throw err;
 connection.end();
 });
@@ -118,5 +118,3 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
-
-
