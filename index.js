@@ -1,9 +1,8 @@
 
-
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-var request = require("request");
+const request = require("request");
 const axios = require("axios");
 var mysql = require('mysql2');
 const mongoose = require("mongoose");
@@ -80,7 +79,10 @@ await trans.save().then(async(item)=>{
 
   const account = await Account.findOne({ phone:row.bill_ref_number});
   account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-  await account.save()
+  await account.save().catch(err => {
+    console.log(err)
+    throw err;
+  });
   const response = {
             deposited: true,
             trans_id:row.trans_id
