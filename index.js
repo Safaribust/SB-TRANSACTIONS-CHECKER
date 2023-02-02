@@ -43,10 +43,12 @@ console.log('Client disconnected:', reason);
 
 const getApiAndEmit = async (socket) => {
 try {
-connectDb().connect((err) => {
+const conn = connectDb();
+if (!conn.state) {
+conn.connect((err) => {
 if (err) throw err;
 console.log('Client disconnected waiting for mysql');
-connection.query('SELECT * FROM transaction WHERE processed = 0', async (err, result) => {
+conn.query('SELECT * FROM transaction WHERE processed = 0', async (err, result) => {
 if (err) throw err;
 console.log('Client disconnected waiting for mysql==========',result);
 Object.keys(result).forEach(async (key) => {
@@ -57,12 +59,12 @@ if (transaction) {
 console.log('No new transactions');
 const response = { deposited: false };
 io.sockets.emit('FromAPI2', response);
-connection.end();
+conn.end();
 return;
 } else {
-connection.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`, (err, result) => {
+conn.query(`UPDATE transaction SET processed = 1 WHERE trans_id = "${row.trans_id}"`, (err, result) => {
 if (err) throw err;
-connection.end();
+conn.end();
 });
 const trans = new Transaction({
 type: 'Deposit',
@@ -73,48 +75,48 @@ amount: row.trans_amount,
 phone: row.bill_ref_number,
 floatBalance: row.org_balance,
 });
-               await trans.save().then(async(item)=>{
-                  try{
+await trans.save().then(async(item)=>{
+  try{
           
-                  const account = await Account.findOne({ phone:row.bill_ref_number});
-                  account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
-                  await account.save()
-                  const response = {
-                            deposited: true,
-                            trans_id:row.trans_id
-                          };
-                  io.sockets.emit("FromAPI2", response);
-                    
-                  }catch(err){
-                    console.log(err)
-                  }
-               })
-                 }
-              
-           
-              });
-         })
-         
-     });
+    const account = await Account.findOne({ phone:row.bill_ref_number});
+    account.balance=parseFloat(+account?.balance) + parseFloat(+row.trans_amount)
+    await account.save()
+    const response = {
+              deposited: true,
+              trans_id:row.trans_id
+            };
+    io.sockets.emit("FromAPI2", response);
+      
+    }catch(err){
+      console.log(err)
+    }
+ })
+   }
 
-   }catch(err){
-   console.log(err)
+
+});
+})
+
+});
+}
+}catch(err){
+console.log(err)
 }
 };
 
- 
+
 const MONGO_URI =  "mongodb+srv://Safaribust:safaribust@cluster0.yuiecha.mongodb.net/?retryWrites=true&w=majority";    
 const PORT = process.env.PORT || 8050;
 mongoose
-  .connect(`${MONGO_URI}`,{
-    useNewUrlParser: true,
-    useUnifiedTopology: true 
-  })
-  .then(() => {
-    server.listen(PORT, () => {
-      console.log(`Server is running at http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+.connect(`${MONGO_URI}`,{
+useNewUrlParser: true,
+useUnifiedTopology: true 
+})
+.then(() => {
+server.listen(PORT, () => {
+console.log(`Server is running at http://localhost:${PORT}`);
+});
+})
+.catch((err) => {
+console.log(err);
+});
