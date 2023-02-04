@@ -44,7 +44,7 @@ var connectionPool = mysql.createPool({
   user: "bustadmin_dbadm",
   password: ";,bp~AcEX,*a",
   database:"bustadmin_paydb",
-  connectionLimit: 100
+  connectionLimit: 100000000
 }); 
 
 const getApiAndEmit = (socket) => {
